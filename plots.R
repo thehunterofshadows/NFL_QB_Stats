@@ -92,3 +92,40 @@ g<-ggplot(
   coord_cartesian(
     ylim=c(150,280)
   )
+
+
+#v5
+fillColor<-c(replicate(8,"#3480EB"),"#203731","#3480eb")
+textColor<-c(replicate(8,"white"),"#FFB612","white")
+qbPos<-c(0,2,4,6,8,10,12,14,16,18)
+g<-ggplot(
+  data = yards[1:10,],
+  mapping = aes(x=reorder(name,-yards_per_games), 
+                y=yards_per_games 
+                )
+)+
+  geom_bar(
+    stat="identity",
+    fill=fillColor
+    )+
+  theme(
+    axis.title.x=element_text(size=14, color="#993333", face="bold"),
+    axis.title.y=element_text(size=14, color="#993333", face="bold"),
+    plot.title=element_text(size=14, color="red", face="bold",hjust=.5),
+    axis.text.x=element_blank(),
+    axis.ticks.x=element_blank()
+  )+
+  labs(
+    title="Yards per Game",x="QB Names",y="Yards per Game"
+  )+
+  geom_text(
+    mapping=aes(label=name,y=((yards_per_games*.9)-qbPos),vjust=.5),
+    angle=90,size=8,colour=textColor
+  )+
+  scale_colour_manual(
+    values="white"
+  )+
+  coord_cartesian(
+    ylim=c(200,280)
+  )
+g
