@@ -16,11 +16,7 @@ yards<-yards[order(-yards$yards_per_games),]
 yards<-yards%>%
   select(name, yards_per_games)
 
-<<<<<<< HEAD
 #v1
-=======
-
->>>>>>> 435bf6543a564cb1a4a8f944f5c771d8bfb30809
 g<-ggplot(data = yards[1:10,]) +
   geom_bar(mapping= aes(x=reorder(name,-yards_per_games), 
                         y=yards_per_games, fill=yards_per_games), stat="identity")+
@@ -32,11 +28,7 @@ g<-ggplot(data = yards[1:10,]) +
     ) +
   labs(title="Yard per Game",x="QB Names",y="Yards per Game")
 
-<<<<<<< HEAD
 #v2
-=======
-
->>>>>>> 435bf6543a564cb1a4a8f944f5c771d8bfb30809
 g<-ggplot(data = yards[1:10,]) +
   geom_bar(mapping= aes(x=reorder(name,-yards_per_games), 
                         y=yards_per_games, fill=yards_per_games), stat="identity")+
@@ -48,7 +40,6 @@ g<-ggplot(data = yards[1:10,]) +
   ) +
   labs(title="Yard per Game",x="QB Names",y="Yards per Game")+
   geom_text(mapping=aes(label=yards_per_games,y=yards_per_games/2))
-<<<<<<< HEAD
 
 #v3
 g<-ggplot(data = yards[1:10,],
@@ -73,6 +64,7 @@ g<-ggplot(data = yards[1:10,],
 #needed to reset these values as i used a ylim to start the plot at 150
 
 #note use of the reorder to ensure bars are in the right order
+#test
 qbPos<-c(0,2,4,6,8,10,12,14,16,18)
 g<-ggplot(
   data = yards[1:10,],
@@ -81,19 +73,10 @@ g<-ggplot(
                        fill=yards_per_games)
   )+
   geom_bar(stat="identity")+
-=======
-
-g<-ggplot(data = yards[1:10,],
-          mapping= aes(x=reorder(name,-yards_per_games), 
-                                           y=yards_per_games, 
-                                           fill=yards_per_games)) +
-  geom_bar( stat="identity")+
->>>>>>> 435bf6543a564cb1a4a8f944f5c771d8bfb30809
   theme(
     axis.text.x=element_text(angle=35,hjust=1,vjust=1, size=12),
     axis.title.x=element_text(size=14, color="#993333", face="bold"),
     axis.title.y=element_text(size=14, color="#993333", face="bold"),
-<<<<<<< HEAD
     plot.title=element_text(size=14, color="red", face="bold",hjust=.5)
   )+
   labs(
@@ -109,9 +92,3 @@ g<-ggplot(data = yards[1:10,],
   coord_cartesian(
     ylim=c(150,280)
   )
-=======
-    plot.title=element_text(size=14, color="red", face="bold")
-  ) +
-  labs(title="Yard per Game",x="QB Names",y="Yards per Game")+
-  geom_text(mapping=aes(label=name,y=yards_per_games/2),angle=90)
->>>>>>> 435bf6543a564cb1a4a8f944f5c771d8bfb30809
