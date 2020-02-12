@@ -124,9 +124,9 @@ pullTouchDownsToInts<-function(qbData){
 
 #v6
 yards<-pullTouchDownsToInts(qbData)
-fillColor<-c(replicate(8,"#3480EB"),"#203731","#3480eb")
-textColor<-c(replicate(8,"white"),"#FFB612","white")
-qbPos<-c(0,2,4,6,8,10,12,14,16,18)
+#fillColor<-c(replicate(8,"#3480EB"),"#203731","#3480eb")
+#textColor<-c(replicate(8,"white"),"#FFB612","white")
+#qbPos<-c(0,2,4,6,8,10,12,14,16,18)
 g<-ggplot(
   data = yards[1:10,],
   mapping = aes(x=reorder(name,-y), 
