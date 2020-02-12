@@ -130,6 +130,8 @@ pullTouchDownsToInts<-function(qbData){
 shinyServer(function(input, output) {
 
     output$distPlot <- renderPlot({
+    #output$distPlot <- renderLeaflet({
+        
         
         qbData<-readRDS("./data/qbData.rds")
         if (input$chartType=="TDtoINT") {
