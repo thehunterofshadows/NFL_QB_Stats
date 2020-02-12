@@ -16,11 +16,36 @@ yards<-yards[order(-yards$yards_per_games),]
 yards$pri_color<-"#121111"
 yards$sec_color<-"#ffffff"
 
+yards$current_team[yards$name=="Peyton Manning"]="Indianapolis Colts"
+yards$current_team[yards$name=="Kirk Cousins"]="Minnesota Vikings"
+yards$current_team[yards$name=="Brett Favre"]="Green Bay Packers"
+
 yards$pri_color[yards$current_team=="Green Bay Packers"]="#203731"
 yards$sec_color[yards$current_team=="Green Bay Packers"]="#FFB612"
 
 yards$pri_color[yards$current_team=="Indianapolis Colts"]="#002C5F"
 yards$sec_color[yards$current_team=="Indianapolis Colts"]="#A2AAAD"
+
+yards$pri_color[yards$current_team=="Minnesota Vikings"]="#4F2683"
+yards$sec_color[yards$current_team=="Minnesota Vikings"]="#FFC62F"
+
+yards$pri_color[yards$current_team=="Detroit Lions"]="#0076B6"
+yards$sec_color[yards$current_team=="Detroit Lions"]="#B0B7BC"
+
+yards$pri_color[yards$current_team=="Atlanta Falcons"]="#A71930"
+yards$sec_color[yards$current_team=="Atlanta Falcons"]="#000000"
+
+yards$pri_color[yards$current_team=="New Orleans Saints"]="#D3BC8D"
+yards$sec_color[yards$current_team=="New Orleans Saints"]="#101820"
+
+yards$pri_color[yards$current_team=="New England Patriots"]="#002244"
+yards$sec_color[yards$current_team=="New England Patriots"]="#C60C30"
+
+yards$pri_color[yards$current_team=="Los Angeles Rams"]="#002244"
+yards$sec_color[yards$current_team=="Los Angeles Rams"]="#866D4B"
+
+yards$pri_color[yards$current_team=="Los Angeles Chargers"]="#002A5E"
+yards$sec_color[yards$current_team=="Los Angeles Chargers"]="#FFC20E"
 
 
 
