@@ -41,3 +41,18 @@ tidyData<-function(yards){
   #return the data to the function
   yards
 }
+
+topFive<-function(x){
+  names<-x %>%
+    select(name) %>%
+    group_by(name) %>%
+    summarise(games=n()) %>%
+    filter(games>36)
+  
+  for (name in names){
+    result$name=name
+    #passer rating
+    
+  }
+  results
+}
