@@ -3,6 +3,10 @@ library(lubridate)
 
 
 tidyData<-function(yards){
+  #the data has the completions and attempts flipped.
+  yards$fixed_passing_completions<-yards$passing_attempts
+  yards$fixed_passing_attempts<-yards$passing_completions
+  
   #pull in the team colors
   teamColors<-read.csv("./data/teamColors.csv", colClasses = "character")
   
