@@ -16,7 +16,7 @@ library(leaflet)
 
 shinyUI(dashboardPage(
     dashboardHeader(title="QB Stats"),
-    dashboardSidebar(),
+    dashboardSidebar(disable=TRUE),
     dashboardBody(
         tags$head(tags$script('
         // Define function to set height of "map" and "map_container"
@@ -54,34 +54,6 @@ shinyUI(dashboardPage(
             )
         )
 
-    # Application title
-    #titlePanel("QB Stats"),
-
-    # Sidebar with a slider input for number of bins
-    # sidebarLayout(
-    #     sidebarPanel(
-    #         # sliderInput("bins",
-    #         #             "Number of bins:",
-    #         #             min = 1,
-    #         #             max = 50,
-    #         #             value = 30),
-    #         # sliderInput("test",
-    #         #             "testing thisNumber of bins:",
-    #         #             min = 1,
-    #         #             max = 50,
-    #         #             value = 30),
-    #         selectInput("chartType",
-    #                     "Chart Type:",
-    #                     c("Touchdowns to INTs" = "TDtoINT",
-    #                       "Total Touchdowns" = "TotalTD")
-    #             
-    #         )
-    #         
-    #     ),
-    # 
-    #     # Show a plot of the generated distribution
-    #     mainPanel(
-    #         plotOutput("distPlot")
         )
     )
 )
