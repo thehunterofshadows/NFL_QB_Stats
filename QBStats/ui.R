@@ -47,8 +47,15 @@ shinyUI(dashboardPage(
                 title="Contorls",
                 selectInput("chartType",
                             "Chart Type:",
-                            c("Touchdowns to INTs" = "TDtoINT",
-                              "Total Touchdowns" = "TotalTD")
+                            c("Total Touchdowns" = "TotalTD",
+                              "Total Yards" = "TotalYards",
+                              "Total Games Won" = "GamesWon",
+                              "Total Passing Completions" = "PassingComp",
+                              "Yards per Game" = "YardsperGame",
+                              "Touchdowns to INTs" = "TDtoINT",
+                              "Completion %" = "CompPct",
+                              "Avg Passer Rating" = "PasserRating"
+                              )
                             
                 )    
             )

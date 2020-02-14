@@ -14,6 +14,58 @@ library(ggplot2)
 
 # Define server logic required to draw a histogram
 
+
+pullPasserRating<-function(qbData){
+    #Pull yards per game data
+    yards<-qbData %>%
+        select(name, pri_color, sec_color, passing_rating) %>%
+        group_by(name,pri_color, sec_color) %>%
+        summarise(y=average(passing_rating),games=n())%>%
+        filter(games>36)
+        
+    yards<-yards[order(-yards$y),]
+    graphTitle<<-"Avg Passer Rating"
+    yards
+}
+
+pullCompPct<-function(qbData){
+    #Pull yards per game data
+    yards<-qbData %>%
+        select(name, pri_color, sec_color, fixed_passing_attempts,fixed_passing_completions) %>%
+        group_by(name,pri_color, sec_color) %>%
+        summarise(passing_attempts=sum(fixed_passing_attempts),passing_completions=sum(fixed_passing_completions)) %>%
+        filter(passing_attempts>1500)
+    yards$y=yards$passing_completions/yards$passing_attempts
+    yards<-yards[order(-yards$y),]
+    graphTitle<<-"Passing %"
+    yards
+}
+
+pullGamesWon<-function(qbData){
+    #Pull yards per game data
+    yards<-qbData %>%
+        select(name, pri_color, sec_color, game_won) %>%
+        filter(game_won=="True") %>%
+        group_by(name,pri_color, sec_color) %>%
+        summarise(y=n())
+    
+    yards<-yards[order(-yards$y),]
+    graphTitle<<-"Games Won"
+    yards
+}
+
+pullPassingComplete<-function(qbData){
+    #Pull yards per game data
+    yards<-qbData %>%
+        select(name, pri_color, sec_color, passing_completions) %>%
+        group_by(name,pri_color, sec_color) %>%
+        summarise(y=sum(passing_completions))
+    
+    yards<-yards[order(-yards$y),]
+    graphTitle<<-"Passing Completions"
+    yards
+}
+
 pullYardsPerGame<-function(qbData){
     #Pull yards per game data
     yards<-qbData %>%
@@ -77,12 +129,23 @@ shinyServer(function(input, output) {
     output$distPlot <- renderPlot({
     #output$distPlot <- renderLeaflet({
         
-        
         qbData<-readRDS("./data/qbData.rds")
         if (input$chartType=="TDtoINT") {
             yards<-pullTouchDownsToInts(qbData)
         } else if (input$chartType=="TotalTD"){
             yards<-pullTouchDowns(qbData)
+        } else if (input$chartType=="YardsperGame"){
+            yards<-pullYardsPerGame(qbData)
+        } else if (input$chartType=="TotalYards"){
+            yards<-pullTotalYards(qbData)
+        } else if (input$chartType=="PassingComp"){
+            yards<-pullPassingComplete(qbData)
+        } else if (input$chartType=="GamesWon"){
+            yards<-pullGamesWon(qbData)
+        } else if (input$chartType=="CompPct"){
+            yards<-pullCompPct(qbData)
+        } else if (input$chartType=="PasserRating"){
+            yards<-pullPasserRating(qbData)
         }
         
         g<-ggplot(
