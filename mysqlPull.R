@@ -25,9 +25,10 @@ qbData = fetch(rs, n=-1)
 lapply(dbListConnections( dbDriver( drv = "MySQL")), dbDisconnect)
 
 rm(mydb, rs, myQuery)
-
+qbData<-tidyData(qbData)
 
 saveRDS(qbData,"./data/qbData.rds")
+saveRDS(qbData,"./QBStats/data/qbData.rds")
 
 #Data Details
 #year is the season start year, not the actual year the game was played.  So game 17 played in 2018, would still show up as year 2017
