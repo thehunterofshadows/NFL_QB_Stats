@@ -20,7 +20,7 @@ pullPasserRating<-function(qbData){
     yards<-qbData %>%
         select(name, pri_color, sec_color, passing_rating) %>%
         group_by(name,pri_color, sec_color) %>%
-        summarise(y=average(passing_rating),games=n())%>%
+        summarise(y=mean(passing_rating),games=n())%>%
         filter(games>36)
         
     yards<-yards[order(-yards$y),]
