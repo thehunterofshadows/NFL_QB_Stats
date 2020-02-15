@@ -1,5 +1,6 @@
 #tidy data
 library(lubridate)
+library(dplyr)
 
 
 tidyData<-function(yards){
@@ -48,7 +49,8 @@ topFive<-function(x){
   #then filter for top 5, then re-average or retotal
   results<-data.table(
     name = character(),
-    passer_rating = numeric()
+    passer_rating = numeric(),
+    years = character()
   )
   namesList<-x %>%
     select(name) %>%
@@ -57,7 +59,7 @@ topFive<-function(x){
     filter(games>36)
   names<-namesList$name
   
-  for (name in names){
+  for (myName in names){
     #passer rating
     #need to ensure avg is correct, as in if less then 16 games were played, can't avg seaon
     #need to split back out to all the games, and avg that.
@@ -65,22 +67,28 @@ topFive<-function(x){
     #   name = character(),
     #   passer_rating = numeric()
     # )
+    #  Need to set it up to limit to only QB's with 5 seasons
     yards<- x %>%
-      filter(name==name,passing_attempts>11) %>%
+      filter(myName==name) %>%
+      filter(passing_attempts>11) %>%
       select(year, passing_rating, pri_color, sec_color) %>%
       group_by(year, pri_color, sec_color) %>%
       summarise(y=mean(passing_rating), games = n()) %>%
         filter(games>8)
       
-    # yards<-x %>%
-    #   filter(name==name) %>%
-    #   select(name,pri_color, sec_color, passing_rating, year) %>%
-    #   group_by(name,year, pri_color, sec_color) %>%
-    #   summarise(y=mean(passing_rating))
+    
     yards<-yards[order(-yards$y),]
-    passer_rating<-mean(yards$y[1:5])
-    myName<-as.character(name)
-    results<-rbind(results, data.table(name=myName, passer_rating=passer_rating))
+    myYears<-yards$year[1:5]
+    
+    yards<- x %>%
+      filter(myName==name, year %in% myYears) %>%
+      select(passing_rating, pri_color, sec_color) %>%
+      group_by(pri_color, sec_color) %>%
+      summarise(y=mean(passing_rating))
+    
+    passer_rating<-yards$y
+    myName<-as.character(myName)
+    results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=paste(myYears,sep = " ")))
     
   }
   results
