@@ -5,6 +5,22 @@ library(data.table)
 
 
 tidyData<-function(yards){
+  
+  #limit to QB's with at least 5 years of 8+ games
+  myNames <- unique(yards %>%
+    select(name, year,date) %>%
+    group_by(name, year) %>%
+    summarise(num_games=n()) %>%
+    filter(num_games >= 8) %>%
+      select(name, year) %>%
+      group_by(name) %>%
+      summarise(years=n()) %>%
+      filter(years>=5) %>%
+    select(name))
+  
+  yards<-yards[yards$name %in% myNames$name,]
+    
+  
   #the data has the completions and attempts flipped.
   yards$fixed_passing_completions<-yards$passing_attempts
   yards$fixed_passing_attempts<-yards$passing_completions
@@ -94,4 +110,71 @@ topFive<-function(x){
     }
   results<-results[order(results$passer_rating,decreasing = TRUE),]
   results
+}
+
+
+topRating<-function(x){
+  #constants
+  min_games = 36
+  top_years = 5
+  min_top_games = 8
+  # stat_value = "passing_rating"
+  stat_value = "passing_yards"
+  stat_select = list(stat_value,"year","pri_color","sec_color")
+  stat_group = list("year","pri_color","sec_color")
+  summ <- paste0('mean(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
+  summ_name <- paste0('mean_', stat_value)
+  
+  
+  #after years are figured out
+  noYear_stat_select = list(stat_value,"pri_color","sec_color")
+  noYear_stat_group = list("pri_color","sec_color")
+
+  
+  #still trying to figure out how i'm going to do this
+  #through it to iterate through each name and for each state pull up the data
+  #then filter for top 5, then re-average or retotal
+  #will probably need to create some of the other fields in the orginal data
+  #such as compleation %.  the per game stuff, not sure how to handle that yet
+  results<-data.table(
+    name = character(),
+    passer_rating = numeric(),
+    years = character()
+  )
+  namesList<-x %>%
+    select(name) %>%
+    group_by(name) %>%
+    summarise(games=n()) %>%
+    filter(games>min_games)
+  names<-namesList$name
+  
+  for (myName in names){
+    #passer rating
+    #  Need to set it up to limit to only QB's with 5 seasons
+    yards<- x %>%
+      filter(myName==name) %>%
+      filter(passing_attempts>11) %>%
+      select_(.dots = stat_select) %>%
+      group_by_(.dots = stat_group) %>%
+      summarise_(y=(.dots = setNames(summ, summ_name)), games = (.dots="n()")) %>%
+        filter(games>min_top_games)
+    
+    if (nrow(yards)>=top_years){
+      yards<-yards[order(-yards$y),]
+      myYears<-yards$year[1:top_years]
+      
+      yards<- x %>%
+        filter(myName==name, year %in% myYears) %>%
+        select_(.dots=noYear_stat_select) %>%
+        group_by_(.dots=noYear_stat_group) %>%
+        summarise_(y=(.dots = setNames(summ, summ_name)))
+      
+      passer_rating<-yards$y
+      myName<-as.character(myName)
+      myYear<-paste(myYears,collapse = " ")
+      results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=myYear))
+    }
   }
+  results<-results[order(results$passer_rating,decreasing = TRUE),]
+  results
+}
