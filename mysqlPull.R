@@ -2,7 +2,7 @@
 #install.packages("RMySQL")
 library(RMySQL)
 library(data.table)
-source('~/datascience/RodgersROF/tidyData.R')
+source("tidyData.R")
 #build connection to database
 mydb = dbConnect(MySQL(), user='justin', password='57Acer@1', dbname='nfl', host='localhost')  
 
