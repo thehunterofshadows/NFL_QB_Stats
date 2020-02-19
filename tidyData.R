@@ -127,8 +127,9 @@ topRating<-function(x){
   stat_group = list("year","pri_color","sec_color")
   #summ <- paste0('mean(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
   #summ_name <- paste0('mean_', stat_value)
-  
-  summ <- paste0('sum(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
+  type<-"sum("
+  summ <- paste0(type, stat_value, ')')  # construct summary method, e.g. mean(mpg)
+  #summ <- paste0('sum(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
   summ_name <- paste0('sum_', stat_value)
   
   
