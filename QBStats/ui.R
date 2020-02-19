@@ -15,10 +15,10 @@ library(leaflet)
 #shinyUI(fluidPage(
 
 shinyUI(dashboardPage(
-    dashboardHeader(title="QB Stats"),
-    dashboardSidebar(disable=TRUE),
-    dashboardBody(
-        tags$head(tags$script('
+  dashboardHeader(title="QB Stats"),
+  dashboardSidebar(disable=TRUE),
+  dashboardBody(
+    tags$head(tags$script('
         // Define function to set height of "map" and "map_container"
       setHeight = function() {
         var window_height = $(window).height();
@@ -40,27 +40,25 @@ shinyUI(dashboardPage(
         setHeight();
       });
       ')),
-        fluidRow(
-            box(id="plot",
-                plotOutput("distPlot")),
-            box(
-                title="Contorls",
-                selectInput("chartType",
-                            "Chart Type:",
-                            c("Total Touchdowns" = "TotalTD",
-                              "Total Yards" = "TotalYards",
-                              "Total Games Won" = "GamesWon",
-                              "Total Passing Completions" = "PassingComp",
-                              "Yards per Game" = "YardsperGame",
-                              "Touchdowns to INTs" = "TDtoINT",
-                              "Completion %" = "CompPct",
-                              "Avg Passer Rating" = "PasserRating"
-                              )
-                            
-                )    
-            )
-        )
-
-        )
+    fluidRow(
+      box(id="plot",
+          plotOutput("distPlot")),
+      box(
+        title="Contorls",
+        selectInput("chartType",
+                    "Chart Type:",
+                    c("Total Touchdowns" = "TotalTD",
+                      "Total Yards" = "TotalYards",
+                      "Total Games Won" = "GamesWon",
+                      "Total Passing Completions" = "PassingComp",
+                      "Yards per Game" = "YardsperGame",
+                      "Touchdowns to INTs" = "TDtoINT",
+                      "Completion %" = "CompPct",
+                      "Avg Passer Rating" = "PasserRating"
+                    )
+        ),
+        checkboxInput("top_five", "Show Top 5 Seasons Only?", FALSE)
+      )
     )
-)
+  )
+))
