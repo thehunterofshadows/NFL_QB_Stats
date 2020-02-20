@@ -18,7 +18,7 @@ form_data<-function(x, type, option){
     min_games = 36
     top_years = 5
     stat_value = option
-    if (type = "top_5") {
+    if (type == "top_5") {
         top_yearsTF = TRUE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
@@ -26,7 +26,7 @@ form_data<-function(x, type, option){
         noYear_stat_group = list("pri_color","sec_color")
         summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
         summ_name <- paste0('mean_', stat_value)
-    } else if (type = "avg") {
+    } else if (type == "avg") {
         top_yearsTF = FALSE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
@@ -34,7 +34,7 @@ form_data<-function(x, type, option){
         noYear_stat_group = list("pri_color","sec_color")
         summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
         summ_name <- paste0('mean_', stat_value)
-    } else if (type = "total"){
+    } else if (type == "total"){
         top_yearsTF = FALSE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
@@ -120,6 +120,7 @@ shinyServer(function(input, output) {
         all_qb_data<-readRDS("./data/qbData.rds")
         
         qbData<-form_data(all_qb_data,input$chart_type, input$chart_option)
+        if (input$type == "top_5") {top_yearsTF = TRUE} else {top_yearsTF = TRUE}
         
         if (input$chartType=="TDtoINT") {
             yards<-pullTouchDownsToInts(qbData)
