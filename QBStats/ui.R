@@ -12,8 +12,9 @@ library(shinydashboard)
 library(leaflet)
 
 input_values<-read.csv("./data/input_values.csv")
-input_names<-as.character(input_values[-1,4])
-names(input_names)<-input_values[-1,2]
+#input_values<-input_values[order(input_values$Order),]
+input_names<-as.character(input_values[,4])
+names(input_names)<-input_values[,2]
 
 # Define UI for application that draws a histogram
 #shinyUI(fluidPage(
@@ -59,7 +60,8 @@ shinyUI(dashboardPage(
         
         selectInput("chart_option",
                     "Chart Type:",
-                    input_names
+                    input_names,
+                    selected = 2
         ),
       )
     )

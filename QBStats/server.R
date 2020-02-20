@@ -1,3 +1,5 @@
+myDebug<-TRUE
+
 #
 # This is the server logic of a Shiny web application. You can run the
 # application by clicking 'Run App' above.
@@ -13,51 +15,51 @@ library(dplyr)
 library(ggplot2)
 
 
-form_data<-function(x, type, option){
+form_data<-function(x, chart_type, chart_option){
+    #test
+    
     #constants
     min_games = 36
     top_years = 5
-    stat_value = option
+    stat_value = as.character(chart_option)
     top_yearsTF = FALSE
-    if (type == "top_5") {
+    min_top_games = 8
+    
+    if (chart_type == "top_five") {
         top_yearsTF = TRUE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
         noYear_stat_select = list(stat_value,"pri_color","sec_color")
         noYear_stat_group = list("pri_color","sec_color")
-        summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ <- paste0("mean(", stat_value, ')') 
         summ_name <- paste0('mean_', stat_value)
-    } else if (type == "avg") {
+    } else if (chart_type == "avg") {
         top_yearsTF = FALSE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
         noYear_stat_select = list(stat_value,"pri_color","sec_color")
         noYear_stat_group = list("pri_color","sec_color")
-        summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ <- paste0("mean(", stat_value, ')') 
         summ_name <- paste0('mean_', stat_value)
-    } else if (type == "total"){
+    } else if (chart_type == "total"){
         top_yearsTF = FALSE
         stat_select = list(stat_value,"year","pri_color","sec_color")
         stat_group = list("year","pri_color","sec_color")
         noYear_stat_select = list(stat_value,"pri_color","sec_color")
         noYear_stat_group = list("pri_color","sec_color")
-        summ <- paste0("sum(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ <- paste0("sum(", stat_value, ')')  
         summ_name <- paste0('sum_', stat_value)
     }
-    min_top_games = 8
     
     
-    
-    #still trying to figure out how i'm going to do this
-    #through it to iterate through each name and for each state pull up the data
-    #then filter for top 5, then re-average or retotal
-    #will probably need to create some of the other fields in the orginal data
-    #such as compleation %.  the per game stuff, not sure how to handle that yet
     results<-data.table(
         name = character(),
-        passer_rating = numeric(),
-        years = character()
+        y = numeric(),
+        years = character(),
+        pri_color = character(),
+        sec_color = character()
     )
+    
     namesList<-x %>%
         select(name) %>%
         group_by(name) %>%
@@ -97,15 +99,21 @@ form_data<-function(x, type, option){
                 summarise_(y=(.dots = setNames(summ, summ_name)))
             myYears<-"All"
         }
+        
         if (number_of_years>=top_years){
             myName<-as.character(myName)
+            value<-yards$y
             myYear<-paste(myYears,collapse = " ")
-            number_of_years<-nrow(yards)
-            
-            results<-rbind(results, data.table(name=myName, y=yards$y, years=myYear))
+            results<-rbind(results, 
+                           data.table(name=myName, 
+                                      y=value, 
+                                      years=myYear,
+                                      pri_color = yards$pri_color,
+                                      sec_color = yards$sec_color))
         }
     }
-    results<-results[order(results$passer_rating,decreasing = TRUE),]
+    
+    results<-results[order(results$y,decreasing = TRUE),]
     results
 }
 
@@ -118,12 +126,19 @@ shinyServer(function(input, output) {
         
         all_qb_data<-readRDS("./data/qbData.rds")
         
-        yards<-form_data(all_qb_data,input$chart_type, input$chart_option)
-        if (input$chart_type == "top_5") {top_yearsTF = TRUE} else {top_yearsTF = FALSE}
+        graph_title<-"Temp Title"
         
+        yards<-form_data(all_qb_data,input$chart_type, input$chart_option)
+        
+        
+        if (input$chart_type == "top_five") {top_yearsTF = TRUE} else {top_yearsTF = FALSE}
+        
+        #pull out the years as we aren't using that right now
+        #also only keeping top 5
+        chart_data<-yards[1:10,1:2]
         
         g<-ggplot(
-            data = yards[1:10,],
+            data = chart_data,
             mapping = aes(x=reorder(name,-y), 
                           y=y 
             )
@@ -140,7 +155,7 @@ shinyServer(function(input, output) {
                 axis.ticks.x=element_blank()
             )+
             labs(
-                title=graphTitle,x="QB Names",y=graphTitle
+                title=graph_title,x="QB Names",y=graph_title
             )+
             geom_text(
                 mapping=aes(label=name,hjust=1.1,vjust=.5),
