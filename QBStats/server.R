@@ -18,6 +18,7 @@ form_data<-function(x, type, option){
     min_games = 36
     top_years = 5
     stat_value = option
+    top_yearsTF = FALSE
     if (type == "top_5") {
         top_yearsTF = TRUE
         stat_select = list(stat_value,"year","pri_color","sec_color")
@@ -97,12 +98,11 @@ form_data<-function(x, type, option){
             myYears<-"All"
         }
         if (number_of_years>=top_years){
-            passer_rating<-yards$y
             myName<-as.character(myName)
             myYear<-paste(myYears,collapse = " ")
             number_of_years<-nrow(yards)
             
-            results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=myYear))
+            results<-rbind(results, data.table(name=myName, y=yards$y, years=myYear))
         }
     }
     results<-results[order(results$passer_rating,decreasing = TRUE),]
@@ -112,33 +112,15 @@ form_data<-function(x, type, option){
 
 shinyServer(function(input, output) {
     
-    
-
+    top_yearsTF=FALSE
     output$distPlot <- renderPlot({
         #output$distPlot <- renderLeaflet({
         
         all_qb_data<-readRDS("./data/qbData.rds")
         
-        qbData<-form_data(all_qb_data,input$chart_type, input$chart_option)
-        if (input$type == "top_5") {top_yearsTF = TRUE} else {top_yearsTF = TRUE}
+        yards<-form_data(all_qb_data,input$chart_type, input$chart_option)
+        if (input$chart_type == "top_5") {top_yearsTF = TRUE} else {top_yearsTF = FALSE}
         
-        if (input$chartType=="TDtoINT") {
-            yards<-pullTouchDownsToInts(qbData)
-        } else if (input$chartType=="TotalTD"){
-            yards<-pullTouchDowns(qbData)
-        } else if (input$chartType=="YardsperGame"){
-            yards<-pullYardsPerGame(qbData)
-        } else if (input$chartType=="TotalYards"){
-            yards<-pullTotalYards(qbData)
-        } else if (input$chartType=="PassingComp"){
-            yards<-pullPassingComplete(qbData)
-        } else if (input$chartType=="GamesWon"){
-            yards<-pullGamesWon(qbData)
-        } else if (input$chartType=="CompPct"){
-            yards<-pullCompPct(qbData)
-        } else if (input$chartType=="PasserRating"){
-            yards<-pullPasserRating(qbData)
-        }
         
         g<-ggplot(
             data = yards[1:10,],
