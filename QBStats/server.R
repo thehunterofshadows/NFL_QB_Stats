@@ -12,124 +12,115 @@ library(data.table)
 library(dplyr)
 library(ggplot2)
 
-# Define server logic required to draw a histogram
 
-
-pullPasserRating<-function(qbData){
-    #Pull yards per game data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_rating) %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(y=mean(passing_rating),games=n())%>%
-        filter(games>36)
+form_data<-function(x, type, option){
+    #constants
+    min_games = 36
+    top_years = 5
+    stat_value = option
+    if (type = "top_5") {
+        top_yearsTF = TRUE
+        stat_select = list(stat_value,"year","pri_color","sec_color")
+        stat_group = list("year","pri_color","sec_color")
+        noYear_stat_select = list(stat_value,"pri_color","sec_color")
+        noYear_stat_group = list("pri_color","sec_color")
+        summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ_name <- paste0('mean_', stat_value)
+    } else if (type = "avg") {
+        top_yearsTF = FALSE
+        stat_select = list(stat_value,"year","pri_color","sec_color")
+        stat_group = list("year","pri_color","sec_color")
+        noYear_stat_select = list(stat_value,"pri_color","sec_color")
+        noYear_stat_group = list("pri_color","sec_color")
+        summ <- paste0("mean(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ_name <- paste0('mean_', stat_value)
+    } else if (type = "total"){
+        top_yearsTF = FALSE
+        stat_select = list(stat_value,"year","pri_color","sec_color")
+        stat_group = list("year","pri_color","sec_color")
+        noYear_stat_select = list(stat_value,"pri_color","sec_color")
+        noYear_stat_group = list("pri_color","sec_color")
+        summ <- paste0("sum(", stat_value, ')')  # construct summary method, e.g. mean(mpg)
+        summ_name <- paste0('sum_', stat_value)
+    }
+    min_top_games = 8
+    
+    
+    
+    #still trying to figure out how i'm going to do this
+    #through it to iterate through each name and for each state pull up the data
+    #then filter for top 5, then re-average or retotal
+    #will probably need to create some of the other fields in the orginal data
+    #such as compleation %.  the per game stuff, not sure how to handle that yet
+    results<-data.table(
+        name = character(),
+        passer_rating = numeric(),
+        years = character()
+    )
+    namesList<-x %>%
+        select(name) %>%
+        group_by(name) %>%
+        summarise(games=n()) %>%
+        filter(games>min_games)
+    names<-namesList$name
+    
+    for (myName in names){
+        #reset number of good years
+        number_of_years<-top_years
         
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Avg Passer Rating"
-    yards
+        if (top_yearsTF){
+            yards<- x %>%
+                filter(myName==name) %>%
+                filter(passing_attempts>11) %>%
+                select_(.dots = stat_select) %>%
+                group_by_(.dots = stat_group) %>%
+                summarise_(y=(.dots = setNames(summ, summ_name)), games = (.dots="n()")) %>%
+                filter(games>min_top_games)
+            number_of_years<-nrow(yards)
+            
+            if (number_of_years>=top_years){
+                yards<-yards[order(-yards$y),]
+                myYears<-yards$year[1:top_years]
+                
+                yards<- x %>%
+                    filter(myName==name, year %in% myYears) %>%
+                    select_(.dots=noYear_stat_select) %>%
+                    group_by_(.dots=noYear_stat_group) %>%
+                    summarise_(y=(.dots = setNames(summ, summ_name)))
+            }
+        } else if (!top_yearsTF) {
+            yards<- x %>%
+                filter(myName==name) %>%
+                select_(.dots=noYear_stat_select) %>%
+                group_by_(.dots=noYear_stat_group) %>%
+                summarise_(y=(.dots = setNames(summ, summ_name)))
+            myYears<-"All"
+        }
+        if (number_of_years>=top_years){
+            passer_rating<-yards$y
+            myName<-as.character(myName)
+            myYear<-paste(myYears,collapse = " ")
+            number_of_years<-nrow(yards)
+            
+            results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=myYear))
+        }
+    }
+    results<-results[order(results$passer_rating,decreasing = TRUE),]
+    results
 }
 
-pullCompPct<-function(qbData){
-    #Pull yards per game data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, fixed_passing_attempts,fixed_passing_completions) %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(passing_attempts=sum(fixed_passing_attempts),passing_completions=sum(fixed_passing_completions)) %>%
-        filter(passing_attempts>1500)
-    yards$y=yards$passing_completions/yards$passing_attempts
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Passing %"
-    yards
-}
 
-pullGamesWon<-function(qbData){
-    #Pull yards per game data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, game_won) %>%
-        filter(game_won=="True") %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(y=n())
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Games Won"
-    yards
-}
-
-pullPassingComplete<-function(qbData){
-    #Pull yards per game data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_completions) %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(y=sum(passing_completions))
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Passing Completions"
-    yards
-}
-
-pullYardsPerGame<-function(qbData){
-    #Pull yards per game data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_yards) %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(passing_yards=sum(passing_yards), num_games=n()) %>%
-        filter(num_games >36)
-    
-    yards$y<-yards$passing_yards/yards$num_games
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Yards per Game"
-    yards
-}
-
-pullTotalYards<-function(qbData){
-    #Pull total yards data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_yards) %>%
-        group_by(name,pri_color, sec_color) %>%
-        summarise(passing_yards=sum(passing_yards), num_games=n()) %>%
-        filter(num_games >36)
-    
-    yards$y<-yards$passing_yards
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Total Yards"
-    yards
-}
-
-pullTouchDowns<-function(qbData){
-    #Pull total yards data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_touchdowns) %>%
-        group_by(name, pri_color, sec_color) %>%
-        summarise(y=sum(passing_touchdowns), num_games=n()) %>%
-        filter(num_games >36)
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Touchdowns"
-    yards
-}
-
-pullTouchDownsToInts<-function(qbData){
-    #Pull total yards data
-    yards<-qbData %>%
-        select(name, pri_color, sec_color, passing_touchdowns,passing_interceptions) %>%
-        group_by(name, pri_color, sec_color) %>%
-        summarise(passing_touchdowns=sum(passing_touchdowns),passing_interceptions=sum(passing_interceptions), num_games=n()) %>%
-        filter(num_games >36)
-    yards$y<-yards$passing_touchdowns/yards$passing_interceptions
-    
-    yards<-yards[order(-yards$y),]
-    graphTitle<<-"Touchdowns to Ints"
-    yards
-}
-
-    
 shinyServer(function(input, output) {
+    
+    
 
     output$distPlot <- renderPlot({
-    #output$distPlot <- renderLeaflet({
+        #output$distPlot <- renderLeaflet({
         
-        qbData<-readRDS("./data/qbData.rds")
+        all_qb_data<-readRDS("./data/qbData.rds")
+        
+        qbData<-form_data(all_qb_data,input$chart_type, input$chart_option)
+        
         if (input$chartType=="TDtoINT") {
             yards<-pullTouchDownsToInts(qbData)
         } else if (input$chartType=="TotalTD"){
@@ -181,8 +172,8 @@ shinyServer(function(input, output) {
                     max(yards$y[1:10]))
             )
         g
-
-
+        
+        
     })
-
+    
 })

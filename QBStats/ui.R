@@ -12,7 +12,7 @@ library(shinydashboard)
 library(leaflet)
 
 input_values<-read.csv("./data/input_values.csv")
-input_names<-as.character(input_values[-1,3])
+input_names<-as.character(input_values[-1,4])
 names(input_names)<-input_values[-1,2]
 
 # Define UI for application that draws a histogram
@@ -51,30 +51,16 @@ shinyUI(dashboardPage(
         title="Contorls",
         
         radioButtons("chart_type", 
-                    "Chart Type: ",
-                    c("Career Averages" = "avg",
-                      "Top 5 Season Averages" = "top_five",
-                      "Career Totals" = "total")),
+                     "Chart Type: ",
+                     c("Career Averages" = "avg",
+                       "Top 5 Season Averages" = "top_five",
+                       "Career Totals" = "total")),
         
-        # selectInput("chartType",
-        #             "Chart Type:",
-        #             c("Total Touchdowns" = "TotalTD",
-        #               "Total Yards" = "TotalYards",
-        #               "Total Games Won" = "GamesWon",
-        #               "Total Passing Completions" = "PassingComp",
-        #               "Yards per Game" = "YardsperGame",
-        #               "Touchdowns to INTs" = "TDtoINT",
-        #               "Completion %" = "CompPct",
-        #               "Avg Passer Rating" = "PasserRating"
-        #             )
-        # ),
         
-        selectInput("chartType",
+        selectInput("chart_option",
                     "Chart Type:",
                     input_names
         ),
-        
-        checkboxInput("top_five", "Show Top 5 Seasons Only?", FALSE)
       )
     )
   )
