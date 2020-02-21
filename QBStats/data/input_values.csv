@@ -1,8 +1,8 @@
 Order,ui_value,id,data_field,total_summ,total_summ_name,avg_summ,avg_summ_name
 1,Passer Rating,passing_rating,passing_rating,,,,
-2,Passing %,passing_pct,tbd,,,,
+2,Passing %,passing_pct,td_to_int,,,,
 3,Touchdowns,td,passing_touchdowns,,,,
 4,Passing Yards,passing_yards,passing_yards,,,,
-5,Games Won,games_won,tbd,,,,
+5,Games Won,games_won,fixed_game_won,,,,
 5,Passing Interceptions,interceptions,passing_interceptions,,,,
 6,Sacks,sacks,passing_sacks,,,,
