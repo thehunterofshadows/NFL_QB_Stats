@@ -1,8 +1,10 @@
+#single threaded tidy took 152 seconds.  Using 8 cores it took 20.34.
+
 #tidy data
 library(lubridate)
 library(dplyr)
 library(data.table)
-
+library(tictoc)
 
 tidyData<-function(yards){
   
@@ -43,6 +45,8 @@ tidyData<-function(yards){
   
   #update team detail
   yards<-yards[order(yards$date,decreasing = TRUE),]
+  tic("sleeping")
+  print("falling asleep...")
   for (i in 1:length(yards$name)){
     #this gives us last team they played for
     team<-yards[yards$name==yards$name[i],][1,"team"]
@@ -54,6 +58,10 @@ tidyData<-function(yards){
     yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
     yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
+  print("waking up")
+  toc()
+  yards$fixed_game_won[yards$game_won=="True"]<-1
+  yards$fixed_game_won[yards$game_won=="False"]<-0
   
   
   #return the data to the function
