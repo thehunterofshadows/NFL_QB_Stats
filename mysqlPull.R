@@ -2,7 +2,7 @@
 #install.packages("RMySQL")
 library(RMySQL)
 library(data.table)
-source("tidyData.R")
+source("tidyData_par.R")
 #build connection to database
 mydb = dbConnect(MySQL(), user='justin', password='57Acer@1', dbname='nfl', host='localhost')  
 
@@ -26,7 +26,8 @@ qbData = fetch(rs, n=-1)
 lapply(dbListConnections( dbDriver( drv = "MySQL")), dbDisconnect)
 
 rm(mydb, rs, myQuery)
-qbData<-tidyData(qbData)
+qbData<-tidy_data_par(qbData)
+#qbData<-tidyData(qbData)
 
 saveRDS(qbData,"./data/qbData.rds")
 saveRDS(qbData,"./QBStats/data/qbData.rds")
