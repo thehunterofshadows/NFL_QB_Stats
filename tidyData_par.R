@@ -44,6 +44,7 @@ tidy_data_par<-function(yards){
     group_by(name, team) %>%
     summarise(nTeam=n())
   mainTeam<-mainTeam[order(mainTeam$nTeam, decreasing = TRUE),]
+  yards$credited_game_win = FALSE
   
   #Setup defaults
   yards$pri_color<-"#121111"
@@ -54,7 +55,7 @@ tidy_data_par<-function(yards){
   #update team detail
   yards<-yards[order(yards$date,decreasing = TRUE),]
   
-  cl<-makeCluster(8) #change the 2 to your number of CPU cores
+  cl<-makeCluster(13) #change the 2 to your number of CPU cores
   registerDoSNOW(cl)
   tic("sleeping")
   print("falling asleep...")
@@ -70,10 +71,21 @@ tidy_data_par<-function(yards){
     # yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
     # yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
-  # games <- yards %>%
-  #   select(date, team) %>%
-  #   group_by(date, team)
-  # 
+  games <- yards %>%
+    select(date, team) %>%
+    group_by(date, team)
+  
+  foreach (i=1:length(games$date), .packages=c("dplyr")) %dopar% {
+    name <- yards %>%
+      select(date, team, name, player_value) %>%
+      filter(date==games$date, team==games$team) %>%
+      group_by(date, team, name) %>%
+      summarise(max(player_value))
+    yards[
+      yards$credited_game_win==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
+      ]=TRUE
+  }
+
 
   print("waking up")
   toc()
