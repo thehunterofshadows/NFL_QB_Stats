@@ -49,13 +49,20 @@ shinyUI(dashboardPage(
       box(id="plot",
           plotOutput("distPlot")),
       box(
-        title="Contorls",
+        title="Controls",
         
         radioButtons("chart_type", 
                      "Chart Type: ",
                      c("Career Averages" = "avg",
                        "Top 5 Season Averages" = "top_five",
-                       "Career Totals" = "total")),
+                       "Career Totals" = "total"
+                       )),
+        radioButtons("season_vs_playoffs", 
+                     "Which games to include?: ",
+                     c("Both" = "both",
+                       "Regular Season" = "reg",
+                       "Playoffs" = "playoffs"
+                       )),
         
         
         selectInput("chart_option",

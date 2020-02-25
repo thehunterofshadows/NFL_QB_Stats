@@ -15,7 +15,7 @@ library(dplyr)
 library(ggplot2)
 
 
-form_data<-function(x, chart_type, chart_option){
+form_data<-function(x, chart_type, chart_option, reg_vs_play){
     #test
     
     #constants
@@ -24,7 +24,10 @@ form_data<-function(x, chart_type, chart_option){
     stat_value = as.character(chart_option)
     top_yearsTF = FALSE
     min_top_games = 8
+    min_season_game_num = 1
+    max_season_game_num = 20
     
+    #Handle filter, for top 5 seasons, all, or just show totals and not an average
     if (chart_type == "top_five") {
         top_yearsTF = TRUE
         stat_select = list(stat_value,"year","pri_color","sec_color")
@@ -51,6 +54,16 @@ form_data<-function(x, chart_type, chart_option){
         summ_name <- paste0('sum_', stat_value)
     }
     
+    #handle filter of regular season, playoffs or all
+    if(reg_vs_play=="reg") {
+        min_season_game_num = 1
+        max_season_game_num = 16
+    }else if (reg_vs_play=="playoffs"){
+        min_season_game_num = 17
+        max_season_game_num = 20
+        min_top_games = 1
+    }
+    
     
     results<-data.table(
         name = character(),
@@ -75,6 +88,7 @@ form_data<-function(x, chart_type, chart_option){
             yards<- x %>%
                 filter(myName==name) %>%
                 filter(passing_attempts>11) %>%
+                filter(game_number >= min_season_game_num, game_number <= max_season_game_num) %>%
                 select_(.dots = stat_select) %>%
                 group_by_(.dots = stat_group) %>%
                 summarise_(y=(.dots = setNames(summ, summ_name)), games = (.dots="n()")) %>%
@@ -87,6 +101,7 @@ form_data<-function(x, chart_type, chart_option){
                 
                 yards<- x %>%
                     filter(myName==name, year %in% myYears) %>%
+                    filter(game_number >= min_season_game_num, game_number <= max_season_game_num) %>%
                     select_(.dots=noYear_stat_select) %>%
                     group_by_(.dots=noYear_stat_group) %>%
                     summarise_(y=(.dots = setNames(summ, summ_name)))
@@ -94,6 +109,7 @@ form_data<-function(x, chart_type, chart_option){
         } else if (!top_yearsTF) {
             yards<- x %>%
                 filter(myName==name) %>%
+                filter(game_number >= min_season_game_num, game_number <= max_season_game_num) %>%
                 select_(.dots=noYear_stat_select) %>%
                 group_by_(.dots=noYear_stat_group) %>%
                 summarise_(y=(.dots = setNames(summ, summ_name)))
@@ -128,7 +144,7 @@ shinyServer(function(input, output) {
         
         graph_title<-"Temp Title"
         
-        yards<-form_data(all_qb_data,input$chart_type, input$chart_option)
+        yards<-form_data(all_qb_data,input$chart_type, input$chart_option, input$season_vs_playoffs)
         
         
         if (input$chart_type == "top_five") {top_yearsTF = TRUE} else {top_yearsTF = FALSE}
