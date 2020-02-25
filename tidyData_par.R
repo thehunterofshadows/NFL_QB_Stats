@@ -28,6 +28,7 @@ tidy_data_par<-function(yards){
   td_value = 100
   yards_value = 1
   yards$player_value = (yards$passing_yards * yards_value) + (yards$passing_touchdowns * td_value)
+
   
   
   #the data has the completions and attempts flipped.
@@ -69,6 +70,10 @@ tidy_data_par<-function(yards){
     # yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
     # yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
+  # games <- yards %>%
+  #   select(date, team) %>%
+  #   group_by(date, team)
+  # 
 
   print("waking up")
   toc()
