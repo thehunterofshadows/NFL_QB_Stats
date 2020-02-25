@@ -22,8 +22,12 @@ tidy_data_par<-function(yards){
                       summarise(years=n()) %>%
                       filter(years>=5) %>%
                       select(name))
-  
   yards<-yards[yards$name %in% myNames$name,]
+  
+  #Create player value to be used to determine who is credited with win
+  td_value = 100
+  yards_value = 1
+  yards$player_value = (yards$passing_yards * yards_value) + (yards$passing_touchdowns * td_value)
   
   
   #the data has the completions and attempts flipped.
@@ -53,6 +57,7 @@ tidy_data_par<-function(yards){
   registerDoSNOW(cl)
   tic("sleeping")
   print("falling asleep...")
+  
   foreach (i=1:length(yards$name)) %dopar% {
     #this gives us last team they played for
     team<-yards[yards$name==yards$name[i],][1,"team"]
@@ -61,12 +66,20 @@ tidy_data_par<-function(yards){
     #since this comes second, it will write the color of the most played team to the data.
     team<-as.character(mainTeam[mainTeam$name==yards$name[i],][1,"team"])
     yards$main_team[i]<-team
-    yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
-    yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
+    # yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
+    # yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
+
   print("waking up")
   toc()
   stopCluster(cl)
+  
+  #Set the team colors
+  foreach(i=1:length(teamColors$team)) %do% {
+    yards$pri_color[yards$team==teamColors$team[i]]<-teamColors$priColor[i]
+    yards$sec_color[yards$team==teamColors$team[i]]<-teamColors$sndColor[i]
+  }
+  
   yards$fixed_game_won[yards$game_won=="True"]<-1
   yards$fixed_game_won[yards$game_won=="False"]<-0
   
