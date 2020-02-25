@@ -6,7 +6,7 @@ library(dplyr)
 library(data.table)
 library(tictoc)
 
-tidyData<-function(yards){
+tidy_data<-function(yards){
   
   #limit to QB's with at least 5 years of 8+ games
   myNames <- unique(yards %>%
