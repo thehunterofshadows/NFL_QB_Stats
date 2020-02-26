@@ -112,7 +112,7 @@ tidy_fix_flipped_data<-function(yards){
 
 tidy_win_credit<-function(yards){
   #set default at no
-  yards$credited_game_win = FALSE
+  yards$credited_game_win = 0
   
   games <- yards %>%
     select(date, team) %>%
@@ -120,14 +120,14 @@ tidy_win_credit<-function(yards){
     summarise(num_games = n())
   
   foreach (i=1:length(games$date), .packages=c("dplyr")) %do% {
-    name <- yards %>%
-      select(date, team, name, player_value) %>%
-      filter(date==games[i]$date, team==games[i]$team) %>%
+    name<-yards[yards$date==games[i]$date & yards$team==games[i]$team,]
+    name <- name %>%
+      select(date, team, player_value) %>%
       group_by(date, team, name, player_value) %>%
       filter(player_value==max(player_value))
-    yards[
-      yards$credited_game_win==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
-      ]=TRUE
+    yards$credited_game_win[
+      yards$team==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
+      ]=1
   }
   
   
