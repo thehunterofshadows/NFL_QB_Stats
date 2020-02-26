@@ -1,6 +1,7 @@
 #single threaded tidy took 152 seconds.  Using 8 cores it took 20.34.
 
 #tidy data
+# library(parallel)
 library(lubridate)
 library(dplyr)
 library(data.table)
@@ -8,54 +9,39 @@ library(doSNOW)
 library(foreach)
 library(tictoc)
 
+##defaults
+#values to determine who gets credited with win
+td_value = 100
+yards_value = 1
 
-tidy_data_par<-function(yards){
-  
-  #limit to QB's with at least 5 years of 8+ games
-  myNames <- unique(yards %>%
-                      select(name, year,date) %>%
-                      group_by(name, year) %>%
-                      summarise(num_games=n()) %>%
-                      filter(num_games >= 8) %>%
-                      select(name, year) %>%
-                      group_by(name) %>%
-                      summarise(years=n()) %>%
-                      filter(years>=5) %>%
-                      select(name))
-  yards<-yards[yards$name %in% myNames$name,]
-  
-  #Create player value to be used to determine who is credited with win
-  td_value = 100
-  yards_value = 1
-  yards$player_value = (yards$passing_yards * yards_value) + (yards$passing_touchdowns * td_value)
+#defatul team colors
+pri_color<-"#121111"
+sec_color<-"#ffffff"
+last_team<-"none"
+main_team<-"none"
 
-  
-  
-  #the data has the completions and attempts flipped.
-  yards$fixed_passing_completions<-yards$passing_attempts
-  yards$fixed_passing_attempts<-yards$passing_completions
+tidy_add_team_data<-function(yards){
+  yards$pri_color<-pri_color
+  yards$sec_color<-sec_color
+  yards$last_team<-last_team
+  yards$main_team<-main_team
   
   #pull in the team colors
   teamColors<-read.csv("teamColors.csv", colClasses = "character")
   
   #create list of which team each player played the most games with.  Then order it so on top is the most played
-  mainTeam<-qbData %>%
+  mainTeam<-yards %>%
     select(name, team) %>%
     group_by(name, team) %>%
     summarise(nTeam=n())
   mainTeam<-mainTeam[order(mainTeam$nTeam, decreasing = TRUE),]
   yards$credited_game_win = FALSE
   
-  #Setup defaults
-  yards$pri_color<-"#121111"
-  yards$sec_color<-"#ffffff"
-  yards$last_team<-"none"
-  yards$main_team<-"none"
-  
   #update team detail
   yards<-yards[order(yards$date,decreasing = TRUE),]
   
-  cl<-makeCluster(13) #change the 2 to your number of CPU cores
+  # cl<-snow::makeCluster(detectCores()-1) #change the 2 to your number of CPU cores
+  cl<-snow::makeCluster(13)
   registerDoSNOW(cl)
   tic("sleeping")
   print("falling asleep...")
@@ -71,22 +57,9 @@ tidy_data_par<-function(yards){
     # yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
     # yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
-  games <- yards %>%
-    select(date, team) %>%
-    group_by(date, team)
   
-  foreach (i=1:length(games$date), .packages=c("dplyr")) %dopar% {
-    name <- yards %>%
-      select(date, team, name, player_value) %>%
-      filter(date==games$date, team==games$team) %>%
-      group_by(date, team, name) %>%
-      summarise(max(player_value))
-    yards[
-      yards$credited_game_win==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
-      ]=TRUE
-  }
-
-
+  
+  
   print("waking up")
   toc()
   stopCluster(cl)
@@ -97,150 +70,82 @@ tidy_data_par<-function(yards){
     yards$sec_color[yards$team==teamColors$team[i]]<-teamColors$sndColor[i]
   }
   
-  yards$fixed_game_won[yards$game_won=="True"]<-1
-  yards$fixed_game_won[yards$game_won=="False"]<-0
-  
-  
-  #return the data to the function
+  #return
   yards
 }
 
-topFive<-function(x){
-  #constants
-  min_games = 36
-  top_years = 5
-  min_top_games = 8
+tidy_reduce_data <-function(yards){
+  #limit to QB's with at least 5 years of 8+ games
+  myNames <- unique(yards %>%
+                      select(name, year,date) %>%
+                      group_by(name, year) %>%
+                      summarise(num_games=n()) %>%
+                      filter(num_games >= 8) %>%
+                      select(name, year) %>%
+                      group_by(name) %>%
+                      summarise(years=n()) %>%
+                      filter(years>=5) %>%
+                      select(name))
+  yards<-yards[yards$name %in% myNames$name,]
   
-  #still trying to figure out how i'm going to do this
-  #through it to iterate through each name and for each state pull up the data
-  #then filter for top 5, then re-average or retotal
-  results<-data.table(
-    name = character(),
-    passer_rating = numeric(),
-    years = character()
-  )
-  namesList<-x %>%
-    select(name) %>%
-    group_by(name) %>%
-    summarise(games=n()) %>%
-    filter(games>min_games)
-  names<-namesList$name
-  
-  for (myName in names){
-    #passer rating
-    #  Need to set it up to limit to only QB's with 5 seasons
-    yards<- x %>%
-      filter(myName==name) %>%
-      filter(passing_attempts>11) %>%
-      select(year, passing_rating, pri_color, sec_color) %>%
-      group_by(year, pri_color, sec_color) %>%
-      summarise(y=mean(passing_rating), games = n()) %>%
-      filter(games>min_top_games)
-    
-    if (nrow(yards)>=top_years){
-      yards<-yards[order(-yards$y),]
-      myYears<-yards$year[1:top_years]
-      
-      yards<- x %>%
-        filter(myName==name, year %in% myYears) %>%
-        select(passing_rating, pri_color, sec_color) %>%
-        group_by(pri_color, sec_color) %>%
-        summarise(y=mean(passing_rating))
-      
-      passer_rating<-yards$y
-      myName<-as.character(myName)
-      myYear<-paste(myYears,collapse = " ")
-      results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=myYear))
-    }
-  }
-  results<-results[order(results$passer_rating,decreasing = TRUE),]
-  results
+  #return
+  yards
 }
 
+tidy_add_player_value<-function(yards){
+  #Create player value to be used to determine who is credited with win
+  yards$player_value = (yards$passing_yards * yards_value) + (yards$passing_touchdowns * td_value)
+  
+  #return
+  yards
+}
 
-topRating<-function(x){
-  #constants
-  min_games = 36
-  top_years = 5
-  top_yearsTF = TRUE
-  min_top_games = 8
+tidy_fix_flipped_data<-function(yards){
+  #the data has the completions and attempts flipped.
+  yards$fixed_passing_completions<-yards$passing_attempts
+  yards$fixed_passing_attempts<-yards$passing_completions
   
-  stat_value = "passing_rating"
-  #stat_value = "passing_yards"
-  #stat_value = "passing_touchdowns"
-  stat_select = list(stat_value,"year","pri_color","sec_color")
-  stat_group = list("year","pri_color","sec_color")
-  #summ <- paste0('mean(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
-  #summ_name <- paste0('mean_', stat_value)
-  type<-"sum("
-  summ <- paste0(type, stat_value, ')')  # construct summary method, e.g. mean(mpg)
-  #summ <- paste0('sum(', stat_value, ')')  # construct summary method, e.g. mean(mpg)
-  summ_name <- paste0('sum_', stat_value)
+  #return
+  yards
+}
+
+tidy_win_credit<-function(yards){
+  games <- yards %>%
+    select(date, team) %>%
+    group_by(date, team) %>%
+    summarise(num_games = n())
   
-  
-  #after years are figured out
-  noYear_stat_select = list(stat_value,"pri_color","sec_color")
-  noYear_stat_group = list("pri_color","sec_color")
-  
-  
-  #still trying to figure out how i'm going to do this
-  #through it to iterate through each name and for each state pull up the data
-  #then filter for top 5, then re-average or retotal
-  #will probably need to create some of the other fields in the orginal data
-  #such as compleation %.  the per game stuff, not sure how to handle that yet
-  results<-data.table(
-    name = character(),
-    passer_rating = numeric(),
-    years = character()
-  )
-  namesList<-x %>%
-    select(name) %>%
-    group_by(name) %>%
-    summarise(games=n()) %>%
-    filter(games>min_games)
-  names<-namesList$name
-  
-  for (myName in names){
-    #reset number of good years
-    number_of_years<-top_years
-    
-    if (top_yearsTF){
-      yards<- x %>%
-        filter(myName==name) %>%
-        filter(passing_attempts>11) %>%
-        select_(.dots = stat_select) %>%
-        group_by_(.dots = stat_group) %>%
-        summarise_(y=(.dots = setNames(summ, summ_name)), games = (.dots="n()")) %>%
-        filter(games>min_top_games)
-      number_of_years<-nrow(yards)
-      
-      if (number_of_years>=top_years){
-        yards<-yards[order(-yards$y),]
-        myYears<-yards$year[1:top_years]
-        
-        yards<- x %>%
-          filter(myName==name, year %in% myYears) %>%
-          select_(.dots=noYear_stat_select) %>%
-          group_by_(.dots=noYear_stat_group) %>%
-          summarise_(y=(.dots = setNames(summ, summ_name)))
-      }
-    } else if (!top_yearsTF) {
-      yards<- x %>%
-        filter(myName==name) %>%
-        select_(.dots=noYear_stat_select) %>%
-        group_by_(.dots=noYear_stat_group) %>%
-        summarise_(y=(.dots = setNames(summ, summ_name)))
-      myYears<-"All"
-    }
-    if (number_of_years>=top_years){
-      passer_rating<-yards$y
-      myName<-as.character(myName)
-      myYear<-paste(myYears,collapse = " ")
-      number_of_years<-nrow(yards)
-      
-      results<-rbind(results, data.table(name=myName, passer_rating=passer_rating, years=myYear))
-    }
+  foreach (i=1:length(games$date), .packages=c("dplyr")) %do% {
+    name <- yards %>%
+      select(date, team, name, player_value) %>%
+      filter(date==games[i]$date, team==games[i]$team) %>%
+      group_by(date, team, name, player_value) %>%
+      filter(player_value==max(player_value))
+    yards[
+      yards$credited_game_win==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
+      ]=TRUE
   }
-  results<-results[order(results$passer_rating,decreasing = TRUE),]
-  results
+  
+  
+  yards$fixed_game_won[yards$game_won=="True"]<-1
+  yards$fixed_game_won[yards$game_won=="False"]<-0
+  
+  #return
+  yards
+}
+
+tidy_main_par<-function(yards){
+  
+  yards<-tidy_reduce_data(yards)
+  
+  yards<-tidy_add_player_value(yards)
+  
+  yards<-tidy_fix_flipped_data(yards)
+  
+  yards<-tidy_add_team_data(yards)
+  
+  # yards<-tidy_win_credit(yards)
+  
+  #return
+  yards
 }
