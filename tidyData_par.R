@@ -21,10 +21,13 @@ last_team<-"none"
 main_team<-"none"
 
 tidy_add_team_data<-function(yards){
+  #set all the values to the defalt value as a starting point
   yards$pri_color<-pri_color
   yards$sec_color<-sec_color
   yards$last_team<-last_team
   yards$main_team<-main_team
+  
+  yards$old_team_value<-yards$team
   
   #pull in the team colors
   teamColors<-read.csv("teamColors.csv", colClasses = "character")
@@ -35,7 +38,7 @@ tidy_add_team_data<-function(yards){
     group_by(name, team) %>%
     summarise(nTeam=n())
   mainTeam<-mainTeam[order(mainTeam$nTeam, decreasing = TRUE),]
-  yards$credited_game_win = FALSE
+  
   
   #update team detail
   yards<-yards[order(yards$date,decreasing = TRUE),]
@@ -54,16 +57,14 @@ tidy_add_team_data<-function(yards){
     #since this comes second, it will write the color of the most played team to the data.
     team<-as.character(mainTeam[mainTeam$name==yards$name[i],][1,"team"])
     yards$main_team[i]<-team
-    # yards$pri_color[i]<-teamColors$priColor[teamColors$team==team]
-    # yards$sec_color[i]<-teamColors$sndColor[teamColors$team==team]
   }
-  
-  
   
   print("waking up")
   toc()
   stopCluster(cl)
   
+  #replace team with new value
+  yards$team<-yards$main_team
   #Set the team colors
   foreach(i=1:length(teamColors$team)) %do% {
     yards$pri_color[yards$team==teamColors$team[i]]<-teamColors$priColor[i]
@@ -110,6 +111,9 @@ tidy_fix_flipped_data<-function(yards){
 }
 
 tidy_win_credit<-function(yards){
+  #set default at no
+  yards$credited_game_win = FALSE
+  
   games <- yards %>%
     select(date, team) %>%
     group_by(date, team) %>%
@@ -145,6 +149,9 @@ tidy_main_par<-function(yards){
   yards<-tidy_add_team_data(yards)
   
   # yards<-tidy_win_credit(yards)
+  
+  #remove all the data dumped into the enviroment.
+  rm(last_team,main_team,pri_color,sec_color,td_value,yards_value,tidy_add_player_value,tidy_add_team_data,tidy_fix_flipped_data,tidy_reduce_data,tidy_win_credit)
   
   #return
   yards
