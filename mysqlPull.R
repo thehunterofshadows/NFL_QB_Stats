@@ -26,7 +26,7 @@ qbData = fetch(rs, n=-1)
 lapply(dbListConnections( dbDriver( drv = "MySQL")), dbDisconnect)
 
 rm(mydb, rs, myQuery)
-qbData<-tidy_data_par(qbData)
+qbData<-tidy_main_par(qbData)
 #qbData<-tidyData(qbData)
 
 saveRDS(qbData,"./data/qbData.rds")
