@@ -117,14 +117,19 @@ tidy_win_credit<-function(yards){
   games <- yards %>%
     select(date, team) %>%
     group_by(date, team) %>%
-    summarise(num_games = n())
+    summarise(num_games = n()) %>% 
+    filter(num_games>1, team!="none")
   
-  foreach (i=1:length(games$date), .packages=c("dplyr")) %do% {
-    name<-yards[yards$date==games[i]$date & yards$team==games[i]$team,]
-    name <- name %>%
+  # foreach (i=1:length(games$date), .packages=c("dplyr")) %do% {
+  for(i in 1:length(games$date)){
+    
+    name <- yards %>%
       select(date, team, player_value) %>%
-      group_by(date, team, name, player_value) %>%
-      filter(player_value==max(player_value))
+      filter(date==games[i]$date, team==games[i]$team) %>%
+      group_by(date, team, player_value)
+    
+    name<-name[order(name$player_value, decreasing = TRUE),]
+    
     yards$credited_game_win[
       yards$team==name[1]$team & yards$date==name[1]$date & yards$name==name[1]$name
       ]=1
@@ -148,10 +153,10 @@ tidy_main_par<-function(yards){
   
   yards<-tidy_add_team_data(yards)
   
-  # yards<-tidy_win_credit(yards)
+  yards<-tidy_win_credit(yards)
   
   #remove all the data dumped into the enviroment.
-  rm(last_team,main_team,pri_color,sec_color,td_value,yards_value,tidy_add_player_value,tidy_add_team_data,tidy_fix_flipped_data,tidy_reduce_data,tidy_win_credit)
+  # rm(last_team,main_team,pri_color,sec_color,td_value,yards_value,tidy_add_player_value,tidy_add_team_data,tidy_fix_flipped_data,tidy_reduce_data,tidy_win_credit)
   
   #return
   yards
