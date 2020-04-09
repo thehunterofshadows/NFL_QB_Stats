@@ -45,6 +45,14 @@ top_yards<-gnbWRData %>%
   summarise(value = sum(receiving_yards)) %>%
   arrange(desc(value))
 
+#most yards no playoffs
+top_yards_noPF<-gnbWRData %>%
+  filter(game_number<17) %>%
+  select(name, receiving_yards) %>%
+  group_by(name) %>%
+  summarise(value = sum(receiving_yards)) %>%
+  arrange(desc(value))
+
 #most recieving TDs
 top_tds<-gnbWRData %>%
   select(name, receiving_touchdowns) %>%
@@ -52,8 +60,37 @@ top_tds<-gnbWRData %>%
   summarise(value = sum(receiving_touchdowns)) %>%
   arrange(desc(value))
 
-#top single season
+#top single season yards
+top_years_yards<-gnbWRData %>%
+  select(name,year, receiving_yards) %>%
+  group_by(name, year) %>%
+  summarise(value = sum(receiving_yards)) %>%
+  arrange(desc(value))
+
+#top single season td
+top_years_tds<-gnbWRData %>%
+  select(name,year, receiving_touchdowns) %>%
+  group_by(name, year) %>%
+  summarise(value = sum(receiving_touchdowns)) %>%
+  arrange(desc(value))
 
 #most catches
+top_catches<-gnbWRData %>%
+  select(name, receiving_receptions) %>%
+  group_by(name) %>%
+  summarise(value = sum(receiving_receptions)) %>%
+  arrange(desc(value))
 
 #catch %?
+gnbWRData$receiving_pct <- gnbWRData$receiving_receptions/gnbWRData$receiving_targets
+catch_pct<-gnbWRData %>%
+  select(name, receiving_receptions, receiving_targets) %>%
+  group_by(name) %>%
+  summarise(receiving_receptions = sum(receiving_receptions), 
+            receiving_targets = sum(receiving_targets)) %>%
+  filter(receiving_targets>0)%>%
+  arrange(desc(receiving_receptions))
+catch_pct$receiving_pct<-catch_pct$receiving_receptions/catch_pct$receiving_targets
+
+
+saveRDS(gnbWRData, './PackersWR/wrData.rds')
